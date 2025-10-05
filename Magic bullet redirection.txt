@@ -1,5 +1,7 @@
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 
 local GetFunction = function(Script, Line)
     for _, v in pairs(getgc()) do
@@ -15,32 +17,36 @@ end
 local SetInfraredEnabled = GetFunction("PlayerClient", 588)
 local PlayerReg = debug.getupvalue(SetInfraredEnabled, 2)
 
+--// Settings
 local domagic = true
 local fov = true
 local fov_show = true
 local fov_size = 150
 local snapline = true
 local sleep_check = true
+local team_check = true -- ✅ added toggle
 
+--// Variables
 local target, spos, cachedtarget
 
+--// Draw FOV
 local CircleOutline = Drawing.new("Circle")
 CircleOutline.Thickness = 2
-CircleOutline.Color = Color3.new(0,0,0)
+CircleOutline.Color = Color3.new(0, 0, 0)
 CircleOutline.Filled = false
 CircleOutline.NumSides = 64
 CircleOutline.Visible = true
 
 local CircleInline = Drawing.new("Circle")
 CircleInline.Thickness = 1
-CircleInline.Color = Color3.new(1,1,1)
+CircleInline.Color = Color3.new(1, 1, 1)
 CircleInline.Filled = false
 CircleInline.NumSides = 64
 CircleInline.Visible = true
 
 local snaplinedrawing = Drawing.new("Line")
 snaplinedrawing.Thickness = 1
-snaplinedrawing.Color = Color3.new(1,1,1)
+snaplinedrawing.Color = Color3.new(1, 1, 1)
 snaplinedrawing.Visible = false
 
 local function update_fov()
@@ -51,6 +57,7 @@ local function update_fov()
 end
 update_fov()
 
+--// Sleep check
 local function IsSleeping(model)
     if model and model:FindFirstChild("AnimationController") and model.AnimationController:FindFirstChild("Animator") then
         for _, v in pairs(model.AnimationController.Animator:GetPlayingAnimationTracks()) do
@@ -62,22 +69,33 @@ local function IsSleeping(model)
     return false
 end
 
+--// Team Check (legit)
+local function IsEnemy(player)
+    if not team_check then return true end
+    if not player or not LocalPlayer then return true end
+    if not player.Team or not LocalPlayer.Team then return true end
+    return player.Team ~= LocalPlayer.Team
+end
+
+--// Get Closest Target
 local function get_closest_target()
     local closest, spos
     local max_dist = fov_size
-    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, player in pairs(PlayerReg) do
-        if player and player.model then
-            local head = player.model:FindFirstChild("Head")
-            if head and (not sleep_check or not IsSleeping(player.model)) then
-                local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
-                if onscreen then
-                    local dist = (Vector2.new(pos.X,pos.Y) - center).Magnitude
-                    if dist < max_dist then
-                        closest = head
-                        spos = Vector2.new(pos.X,pos.Y)
-                        max_dist = dist
+        if player and player.model and player.player then
+            if IsEnemy(player.player) then -- ✅ legit team check
+                local head = player.model:FindFirstChild("Head")
+                if head and (not sleep_check or not IsSleeping(player.model)) then
+                    local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
+                    if onscreen then
+                        local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                        if dist < max_dist then
+                            closest = head
+                            spos = Vector2.new(pos.X, pos.Y)
+                            max_dist = dist
+                        end
                     end
                 end
             end
@@ -86,9 +104,10 @@ local function get_closest_target()
     return closest, spos
 end
 
+--// Render Update
 RunService.RenderStepped:Connect(function()
     target, spos = get_closest_target()
-    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     if target and spos then
         snaplinedrawing.Visible = snapline
@@ -102,6 +121,7 @@ RunService.RenderStepped:Connect(function()
     CircleInline.Position = center
 end)
 
+--// Magic bullet logic
 local function add_magic(obj)
     if not obj then return end
     if not obj:FindFirstChild("whiz") then return end
@@ -129,6 +149,7 @@ local function add_magic(obj)
     end)
 end
 
+--// Connect to bullet spawn
 if workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore") then
     workspace.Const.Ignore.ChildAdded:Connect(add_magic)
 end
