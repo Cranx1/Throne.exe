@@ -181,23 +181,20 @@ RunService.RenderStepped:Connect(function()
         targetCircle.Visible = true
         HL.Adornee = closest
     else
-        HL.Adornee = nil
-        snapLine.Visible = false
-        targetCircle.Visible = false
-    end
+      https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/Cross%20haird
 end)
 end)
 local tab = DrRayLibrary.newTab("👀Visuals 1👀", "ImageIdHere")
 -- Esp
 tab.newButton("Esp", "", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/milo22-ux/Trident-survival-stuff/refs/heads/main/V5%20esp",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/V5%20esp",true))()
 end)
 -- CrossHair
 tab.newButton("CrossHair", "", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/milo22-ux/Trident-survival-stuff/refs/heads/main/Cross%20hair",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/Cross%20hair",true))()
 end)
 -- Name
-loadstring(game:HttpGet("https://raw.githubusercontent.com/milo22-ux/V5-paid/refs/heads/main/Name",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/Name.txt",true))()
 --
 local tab = DrRayLibrary.newTab("🌍 World 🌍", "ImageIdHere")
 local Lighting = game:GetService("Lighting")
