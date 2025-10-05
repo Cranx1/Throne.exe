@@ -25,7 +25,7 @@ local window = DrRayLibrary:Load("Zacari.exe", "Default")
 local tab = DrRayLibrary.newTab("⚔️Combat⚔️", "ImageIdHere")
 -- hitbox
 tab.newButton("Hitbox", "", function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/milo22-ux/Trident-survival-stuff/refs/heads/main/V5%20hitbox",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/V5%20hitbox",true))()
 end)
 -- No Spread
 tab.newButton("No Spread", "", function()
@@ -51,10 +51,10 @@ end))
 end)
 -- no cooldown
 tab.newButton("No cooldown", "MiningDrill", function()
-  loadstring(game:HttpGet("https://raw.githubusercontent.com/milo22-ux/Trident-survival-stuff/refs/heads/main/Mine%20speed%20v5",true))()
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/Mine%20speed%20v5",true))()
 end)
 tab.newButton("Magic bullet redirection", "", function()
-  loadstring(game:HttpGet("https://raw.githubusercontent.com/milo22-ux/V5-paid/refs/heads/main/Magic%20bullet%20redirection",true))() 
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/Magic%20bullet%20redirection.txt",true))() 
 end)
 tab.newButton("Silent aim", "", function()
 local baseRadius = 200
