@@ -22,7 +22,7 @@ local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 --
 local window = DrRayLibrary:Load("Zacari.exe", "Default")
 --
-local tab = DrRayLibrary.newTab("⚔️Combat⚔️", "ImageIdHere")
+local tab = DrRayLibrary.newTab("Combat", "ImageIdHere")
 -- hitbox
 tab.newButton("Hitbox", "", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/V5%20hitbox",true))()
@@ -184,7 +184,7 @@ RunService.RenderStepped:Connect(function()
       https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/Cross%20haird
 end)
 end)
-local tab = DrRayLibrary.newTab("👀Visuals 1👀", "ImageIdHere")
+local tab = DrRayLibrary.newTab("Visuals", "ImageIdHere")
 -- Esp
 tab.newButton("Esp", "", function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/TSthings/V5%20esp",true))()
@@ -196,7 +196,7 @@ end)
 -- Name
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Cranx1/Throne.exe/refs/heads/main/Name.txt",true))()
 --
-local tab = DrRayLibrary.newTab("🌍 World 🌍", "ImageIdHere")
+local tab = DrRayLibrary.newTab("World", "ImageIdHere")
 local Lighting = game:GetService("Lighting")
 local Camera = workspace.CurrentCamera
 --
@@ -271,7 +271,7 @@ end)
 tab.newToggle("FOV", "Toggle FOV override on/off", false, function(state)
     FovEnabled = state
 end)
-local tab = DrRayLibrary.newTab("❓Random❓", "ImageIdHere")
+local tab = DrRayLibrary.newTab("Misc", "ImageIdHere")
 -- Chat Spammer
 local Chatspam = false
 local spamspeed = speed
