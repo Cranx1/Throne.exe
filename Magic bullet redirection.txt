@@ -31,6 +31,51 @@ local team_check = true -- ✅ toggle for team check
 --// Variables
 local target, spos, cachedtarget
 
+-- ----------------------------------------------------------------------
+-- // TEAM CHECK LOGIC (ENHANCED)
+-- ----------------------------------------------------------------------
+
+-- Store the local player's custom team data for comparison
+local LocalCustomTeamValue = nil 
+
+-- Attempt to find the local player's custom team value from PlayerReg
+for _, v in pairs(PlayerReg) do
+    if v and v.player == LocalPlayer then
+        -- !! IMPORTANT: You MUST verify the actual property name for the team ID in 'v'. 
+        -- Common names are 'TeamId', 'team', 'faction'. I'll check for 'team' or 'Team' as examples.
+        LocalCustomTeamValue = v.team or v.Team or nil
+        break
+    end
+end
+
+--// ✅ Enhanced Team Check function
+-- Takes the player object (from the Roblox Players service) AND the PlayerReg entry (data)
+local function IsEnemy(player, playerData)
+    if not team_check then return true end -- disabled = target everyone
+    if not player or not LocalPlayer then return true end -- invalid target
+
+    -- 1. Check for custom team match (if a custom value was found)
+    if LocalCustomTeamValue then
+        -- Check the target's custom team property (e.g., playerData.team or playerData.Team)
+        local TargetCustomTeamValue = playerData.team or playerData.Team or nil
+        if TargetCustomTeamValue and TargetCustomTeamValue == LocalCustomTeamValue then
+            return false -- Same custom team, NOT an enemy
+        end
+    end
+    
+    -- 2. Fallback to standard Roblox teamcheck
+    if player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team then
+        return false -- Same Roblox team, NOT an enemy
+    end
+
+    -- If none of the above passed, they are an enemy.
+    return true
+end
+
+-- ----------------------------------------------------------------------
+-- // DRAWING AND VISUALS (UNCHANGED)
+-- ----------------------------------------------------------------------
+
 --// Draw FOV
 local CircleOutline = Drawing.new("Circle")
 CircleOutline.Thickness = 2
@@ -59,7 +104,11 @@ local function update_fov()
 end
 update_fov()
 
---// Sleep check
+-- ----------------------------------------------------------------------
+-- // LOGIC FUNCTIONS (UPDATED GetClosestTarget)
+-- ----------------------------------------------------------------------
+
+--// Sleep check (UNCHANGED)
 local function IsSleeping(model)
     if model and model:FindFirstChild("AnimationController") and model.AnimationController:FindFirstChild("Animator") then
         for _, v in pairs(model.AnimationController.Animator:GetPlayingAnimationTracks()) do
@@ -71,15 +120,7 @@ local function IsSleeping(model)
     return false
 end
 
---// ✅ Team Check
-local function IsEnemy(player)
-    if not team_check then return true end -- disabled = target everyone
-    if not player or not LocalPlayer then return true end
-    if not player.Team or not LocalPlayer.Team then return true end
-    return player.Team ~= LocalPlayer.Team
-end
-
---// ✅ Get Closest Target (with team check + sleep check)
+--// ✅ Get Closest Target (passes player data to IsEnemy)
 local function get_closest_target()
     local closest, spos
     local max_dist = fov_size
@@ -88,7 +129,8 @@ local function get_closest_target()
     for _, playerData in pairs(PlayerReg) do
         if playerData and playerData.model and playerData.player then
             local player = playerData.player
-            if IsEnemy(player) then
+            -- Pass both the player object and the playerData (registry entry)
+            if IsEnemy(player, playerData) then
                 local head = playerData.model:FindFirstChild("Head")
                 if head and (not sleep_check or not IsSleeping(playerData.model)) then
                     local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
@@ -106,6 +148,10 @@ local function get_closest_target()
     end
     return closest, spos
 end
+
+-- ----------------------------------------------------------------------
+-- // MAIN LOOPS (UNCHANGED)
+-- ----------------------------------------------------------------------
 
 --// Visual Update
 RunService.RenderStepped:Connect(function()
@@ -140,6 +186,22 @@ local function add_magic(obj)
             local bulletpos = obj.CFrame.Position
             local primary = cachedtarget.Parent and cachedtarget.Parent.PrimaryPart
             if primary and primary:IsA("BasePart") then
+                primary.CFrame = CFrame.new(Vector3.new(bulletpos.X, primary.Position.Y, bulletpos.Z))
+            end
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        if not obj or not obj.Parent then
+            cachedtarget = false
+        end
+    end)
+end
+
+--// Connect Magic Bullet
+if workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore") then
+    workspace.Const.Ignore.ChildAdded:Connect(add_magic)
+end
                 primary.CFrame = CFrame.new(Vector3.new(bulletpos.X, primary.Position.Y, bulletpos.Z))
             end
         end
