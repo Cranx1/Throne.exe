@@ -3,7 +3,8 @@ local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-local GetFunction = function(Script, Line)
+--// Get Function from GC
+local function GetFunction(Script, Line)
     for _, v in pairs(getgc()) do
         if typeof(v) == "function" and debug.info(v, "sl") then
             local src, lineNum = debug.info(v, "s"), debug.info(v, "l")
@@ -14,6 +15,7 @@ local GetFunction = function(Script, Line)
     end
 end
 
+--// Get Player Registry
 local SetInfraredEnabled = GetFunction("PlayerClient", 588)
 local PlayerReg = debug.getupvalue(SetInfraredEnabled, 2)
 
@@ -24,7 +26,7 @@ local fov_show = true
 local fov_size = 150
 local snapline = true
 local sleep_check = true
-local team_check = true -- ✅ added toggle
+local team_check = true -- ✅ toggle for team check
 
 --// Variables
 local target, spos, cachedtarget
@@ -69,25 +71,26 @@ local function IsSleeping(model)
     return false
 end
 
---// Team Check (legit)
+--// ✅ Team Check
 local function IsEnemy(player)
-    if not team_check then return true end
+    if not team_check then return true end -- disabled = target everyone
     if not player or not LocalPlayer then return true end
     if not player.Team or not LocalPlayer.Team then return true end
     return player.Team ~= LocalPlayer.Team
 end
 
---// Get Closest Target
+--// ✅ Get Closest Target (with team check + sleep check)
 local function get_closest_target()
     local closest, spos
     local max_dist = fov_size
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
-    for _, player in pairs(PlayerReg) do
-        if player and player.model and player.player then
-            if IsEnemy(player.player) then -- ✅ legit team check
-                local head = player.model:FindFirstChild("Head")
-                if head and (not sleep_check or not IsSleeping(player.model)) then
+    for _, playerData in pairs(PlayerReg) do
+        if playerData and playerData.model and playerData.player then
+            local player = playerData.player
+            if IsEnemy(player) then
+                local head = playerData.model:FindFirstChild("Head")
+                if head and (not sleep_check or not IsSleeping(playerData.model)) then
                     local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
                     if onscreen then
                         local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
@@ -104,7 +107,7 @@ local function get_closest_target()
     return closest, spos
 end
 
---// Render Update
+--// Visual Update
 RunService.RenderStepped:Connect(function()
     target, spos = get_closest_target()
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
@@ -121,7 +124,7 @@ RunService.RenderStepped:Connect(function()
     CircleInline.Position = center
 end)
 
---// Magic bullet logic
+--// Magic Bullet Logic
 local function add_magic(obj)
     if not obj then return end
     if not obj:FindFirstChild("whiz") then return end
@@ -149,7 +152,7 @@ local function add_magic(obj)
     end)
 end
 
---// Connect to bullet spawn
+--// Connect Magic Bullet
 if workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore") then
     workspace.Const.Ignore.ChildAdded:Connect(add_magic)
 end
