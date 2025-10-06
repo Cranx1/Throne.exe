@@ -1,10 +1,7 @@
-local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Camera = workspace.CurrentCamera
-local LocalPlayer = Players.LocalPlayer
 
---// Get Function from GC
-local function GetFunction(Script, Line)
+local GetFunction = function(Script, Line)
     for _, v in pairs(getgc()) do
         if typeof(v) == "function" and debug.info(v, "sl") then
             local src, lineNum = debug.info(v, "s"), debug.info(v, "l")
@@ -15,85 +12,35 @@ local function GetFunction(Script, Line)
     end
 end
 
---// Get Player Registry
 local SetInfraredEnabled = GetFunction("PlayerClient", 588)
 local PlayerReg = debug.getupvalue(SetInfraredEnabled, 2)
 
---// Settings
 local domagic = true
 local fov = true
 local fov_show = true
 local fov_size = 150
 local snapline = true
 local sleep_check = true
-local team_check = true -- ✅ toggle for team check
 
---// Variables
 local target, spos, cachedtarget
 
--- ----------------------------------------------------------------------
--- // TEAM CHECK LOGIC (ENHANCED)
--- ----------------------------------------------------------------------
-
--- Store the local player's custom team data for comparison
-local LocalCustomTeamValue = nil 
-
--- Attempt to find the local player's custom team value from PlayerReg
-for _, v in pairs(PlayerReg) do
-    if v and v.player == LocalPlayer then
-        -- !! IMPORTANT: You MUST verify the actual property name for the team ID in 'v'. 
-        -- Common names are 'TeamId', 'team', 'faction'. I'll check for 'team' or 'Team' as examples.
-        LocalCustomTeamValue = v.team or v.Team or nil
-        break
-    end
-end
-
---// ✅ Enhanced Team Check function
--- Takes the player object (from the Roblox Players service) AND the PlayerReg entry (data)
-local function IsEnemy(player, playerData)
-    if not team_check then return true end -- disabled = target everyone
-    if not player or not LocalPlayer then return true end -- invalid target
-
-    -- 1. Check for custom team match (if a custom value was found)
-    if LocalCustomTeamValue then
-        -- Check the target's custom team property (e.g., playerData.team or playerData.Team)
-        local TargetCustomTeamValue = playerData.team or playerData.Team or nil
-        if TargetCustomTeamValue and TargetCustomTeamValue == LocalCustomTeamValue then
-            return false -- Same custom team, NOT an enemy
-        end
-    end
-    
-    -- 2. Fallback to standard Roblox teamcheck
-    if player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team then
-        return false -- Same Roblox team, NOT an enemy
-    end
-
-    -- If none of the above passed, they are an enemy.
-    return true
-end
-
--- ----------------------------------------------------------------------
--- // DRAWING AND VISUALS (UNCHANGED)
--- ----------------------------------------------------------------------
-
---// Draw FOV
 local CircleOutline = Drawing.new("Circle")
 CircleOutline.Thickness = 2
-CircleOutline.Color = Color3.new(0, 0, 0)
+CircleOutline.Color = Color3.new(0,0,0)
 CircleOutline.Filled = false
 CircleOutline.NumSides = 64
 CircleOutline.Visible = true
 
 local CircleInline = Drawing.new("Circle")
 CircleInline.Thickness = 1
-CircleInline.Color = Color3.new(1, 1, 1)
+CircleInline.Color = Color3.new(1,1,1)
 CircleInline.Filled = false
 CircleInline.NumSides = 64
 CircleInline.Visible = true
 
 local snaplinedrawing = Drawing.new("Line")
 snaplinedrawing.Thickness = 1
-snaplinedrawing.Color = Color3.new(1, 1, 1)
+snaplinedrawing.Color = Color3.new(1,1,1)
 snaplinedrawing.Visible = false
 
 local function update_fov()
@@ -104,11 +51,6 @@ local function update_fov()
 end
 update_fov()
 
--- ----------------------------------------------------------------------
--- // LOGIC FUNCTIONS (UPDATED GetClosestTarget)
--- ----------------------------------------------------------------------
-
---// Sleep check (UNCHANGED)
 local function IsSleeping(model)
     if model and model:FindFirstChild("AnimationController") and model.AnimationController:FindFirstChild("Animator") then
         for _, v in pairs(model.AnimationController.Animator:GetPlayingAnimationTracks()) do
@@ -120,27 +62,22 @@ local function IsSleeping(model)
     return false
 end
 
---// ✅ Get Closest Target (passes player data to IsEnemy)
 local function get_closest_target()
     local closest, spos
     local max_dist = fov_size
-    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
 
-    for _, playerData in pairs(PlayerReg) do
-        if playerData and playerData.model and playerData.player then
-            local player = playerData.player
-            -- Pass both the player object and the playerData (registry entry)
-            if IsEnemy(player, playerData) then
-                local head = playerData.model:FindFirstChild("Head")
-                if head and (not sleep_check or not IsSleeping(playerData.model)) then
-                    local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
-                    if onscreen then
-                        local dist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-                        if dist < max_dist then
-                            closest = head
-                            spos = Vector2.new(pos.X, pos.Y)
-                            max_dist = dist
-                        end
+    for _, player in pairs(PlayerReg) do
+        if player and player.model then
+            local head = player.model:FindFirstChild("Head")
+            if head and (not sleep_check or not IsSleeping(player.model)) then
+                local pos, onscreen = Camera:WorldToViewportPoint(head.Position)
+                if onscreen then
+                    local dist = (Vector2.new(pos.X,pos.Y) - center).Magnitude
+                    if dist < max_dist then
+                        closest = head
+                        spos = Vector2.new(pos.X,pos.Y)
+                        max_dist = dist
                     end
                 end
             end
@@ -149,14 +86,9 @@ local function get_closest_target()
     return closest, spos
 end
 
--- ----------------------------------------------------------------------
--- // MAIN LOOPS (UNCHANGED)
--- ----------------------------------------------------------------------
-
---// Visual Update
 RunService.RenderStepped:Connect(function()
     target, spos = get_closest_target()
-    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
 
     if target and spos then
         snaplinedrawing.Visible = snapline
@@ -170,7 +102,6 @@ RunService.RenderStepped:Connect(function()
     CircleInline.Position = center
 end)
 
---// Magic Bullet Logic
 local function add_magic(obj)
     if not obj then return end
     if not obj:FindFirstChild("whiz") then return end
@@ -198,23 +129,6 @@ local function add_magic(obj)
     end)
 end
 
---// Connect Magic Bullet
-if workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore") then
-    workspace.Const.Ignore.ChildAdded:Connect(add_magic)
-end
-                primary.CFrame = CFrame.new(Vector3.new(bulletpos.X, primary.Position.Y, bulletpos.Z))
-            end
-        end
-    end)
-
-    RunService.Heartbeat:Connect(function()
-        if not obj or not obj.Parent then
-            cachedtarget = false
-        end
-    end)
-end
-
---// Connect Magic Bullet
 if workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore") then
     workspace.Const.Ignore.ChildAdded:Connect(add_magic)
 end
